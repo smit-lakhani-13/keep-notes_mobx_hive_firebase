@@ -5,6 +5,10 @@ import 'package:keep_notes/models/note_model.dart';
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  FirebaseService() {
+    init();
+  }
+
   Future<String?> addNote(Note note) async {
     try {
       DocumentReference docRef = await _firestore.collection('notes').add({
@@ -56,5 +60,9 @@ class FirebaseService {
       print(e.toString());
       return null;
     }
+  }
+
+  void init() async {
+    await Firebase.initializeApp();
   }
 }

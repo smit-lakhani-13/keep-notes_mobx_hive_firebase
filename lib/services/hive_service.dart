@@ -18,7 +18,8 @@ class HiveService {
     return box;
   }
 
-  Future<void> addNote({
+  Future<void> addNote(
+    Note note, {
     required String title,
     required String description,
     required DateTime createdTime,

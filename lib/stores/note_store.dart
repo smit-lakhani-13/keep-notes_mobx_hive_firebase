@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -31,12 +29,12 @@ abstract class _NoteStore with Store {
       createdTime: createdTime,
       key: key,
     );
-    await _hiveService.addNote(
-      title: title,
-      description: description,
-      createdTime: createdTime,
-      key: key,
-    );
+    await _firebaseService.addNote(note);
+    await _hiveService.addNote(note,
+        title: 'title',
+        description: 'description',
+        createdTime: createdTime,
+        key: 'key');
     notesList.add(note);
   }
 
@@ -70,33 +68,12 @@ abstract class _NoteStore with Store {
     notesList[index] = note;
   }
 
-  @action
-  Future<void> editNote({
-    required int index,
-    required String title,
-    required String description,
-    required DateTime createdTime,
-    required String key,
-  }) async {
-    final note = notesList[index];
-    note.title = title;
-    note.description = description;
-    note.createdTime = createdTime;
-    note.key = key;
-    await _firebaseService.updateNote(note);
-    await _hiveService.updateNoteAt(
-      index: index,
-      title: title,
-      description: description,
-      createdTime: createdTime,
-      key: key,
-    );
-    notesList[index] = note;
-  }
-
   Future<void> init() async {
+    _firebaseService.init();
     await _hiveService.init();
-    final notes = await _hiveService.getAllNotes();
-    notesList.addAll(notes);
+    final notes = await _firebaseService.getAllNotes();
+    if (notes != null) {
+      notesList.addAll(notes);
+    }
   }
 }
