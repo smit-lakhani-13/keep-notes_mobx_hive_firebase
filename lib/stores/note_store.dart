@@ -70,6 +70,30 @@ abstract class _NoteStore with Store {
     notesList[index] = note;
   }
 
+  @action
+  Future<void> editNote({
+    required int index,
+    required String title,
+    required String description,
+    required DateTime createdTime,
+    required String key,
+  }) async {
+    final note = notesList[index];
+    note.title = title;
+    note.description = description;
+    note.createdTime = createdTime;
+    note.key = key;
+    await _firebaseService.updateNote(note);
+    await _hiveService.updateNoteAt(
+      index: index,
+      title: title,
+      description: description,
+      createdTime: createdTime,
+      key: key,
+    );
+    notesList[index] = note;
+  }
+
   Future<void> init() async {
     await _hiveService.init();
     final notes = await _hiveService.getAllNotes();

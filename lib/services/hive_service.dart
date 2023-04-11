@@ -56,6 +56,23 @@ class HiveService {
     await box.putAt(index, note);
   }
 
+  Future<void> editNoteAt({
+    required int index,
+    required String title,
+    required String description,
+    required DateTime createdTime,
+    required String key,
+  }) async {
+    final box = await openBox();
+    final note = Note(
+      title: title,
+      description: description,
+      createdTime: createdTime,
+      key: key,
+    );
+    await box.putAt(index, note);
+  }
+
   Future<List<Note>> getAllNotes() async {
     final box = await openBox();
     final notes = box.values.toList();
