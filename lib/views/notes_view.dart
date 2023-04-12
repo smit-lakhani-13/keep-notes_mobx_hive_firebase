@@ -10,7 +10,8 @@ class NotesView extends StatefulWidget {
   _NotesViewState createState() => _NotesViewState();
 }
 
-class _NotesViewState extends State<NotesView> {
+class _NotesViewState extends State<NotesView>
+    with SingleTickerProviderStateMixin {
   final NoteStore _noteStore = NoteStore();
 
   final TextEditingController _titleController = TextEditingController();
@@ -19,10 +20,32 @@ class _NotesViewState extends State<NotesView> {
   bool _isEditMode = false;
   int _editIndex = -1;
 
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
   @override
   void initState() {
     super.initState();
     _noteStore.init();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _startAnimation() {
+    _animationController.reset();
+    _animationController.forward();
   }
 
   @override
@@ -31,49 +54,65 @@ class _NotesViewState extends State<NotesView> {
       appBar: AppBar(
         title: const Text('Notes'),
       ),
-      body: Observer(
-        builder: (_) {
-          if (_noteStore.notesList.isEmpty) {
-            return const Center(
-              child: Text('No notes found.'),
-            );
-          } else {
-            return ListView.builder(
-              itemCount: _noteStore.notesList.length,
-              itemBuilder: (_, index) {
-                final note = _noteStore.notesList[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(note.title),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: Observer(builder: (_) {
+        if (_noteStore.notesList.isEmpty) {
+          return const Center(
+            child: Text('No notes found.'),
+          );
+        } else {
+          return ListView.builder(
+            itemCount: _noteStore.notesList.length,
+            itemBuilder: (_, index) {
+              final note = _noteStore.notesList[index];
+              return InkWell(
+                onTap: () {
+                  _isEditMode = true;
+                  _editIndex = index;
+                  _titleController.text = note.title;
+                  _descriptionController.text = note.description;
+                  showDialog(
+                    context: context,
+                    builder: (_) => _buildAddNoteDialog(),
+                  );
+                },
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(note.description),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Created: ${DateFormat.yMd().add_jm().format(note.createdTime)}',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            _isEditMode = true;
-                            _editIndex = index;
-                            _titleController.text = note.title;
-                            _descriptionController.text = note.description;
-                            showDialog(
-                              context: context,
-                              builder: (_) => _buildAddNoteDialog(),
-                            );
-                          },
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                note.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.0,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                note.description,
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Created: ${DateFormat.yMd().add_jm().format(note.createdTime)}',
+                                style:
+                                    TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete),
+                          color: Colors.black,
                           onPressed: () {
                             _noteStore.removeNoteAt(index);
                           },
@@ -81,12 +120,12 @@ class _NotesViewState extends State<NotesView> {
                       ],
                     ),
                   ),
-                );
-              },
-            );
-          }
-        },
-      ),
+                ),
+              );
+            },
+          );
+        }
+      }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _isEditMode = false;
@@ -97,68 +136,89 @@ class _NotesViewState extends State<NotesView> {
           );
         },
         child: const Icon(Icons.add),
+        backgroundColor: Colors.indigo.shade400,
       ),
     );
   }
 
   Widget _buildAddNoteDialog() {
-    return AlertDialog(
-      title: Text(_isEditMode ? 'Edit note' : 'Add note'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _descriptionController,
-              maxLines: null,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-              ),
-            ),
-          ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: MediaQuery.of(context).size.width,
+      height: _isEditMode ? 300.0 : 220.0,
+      child: AlertDialog(
+        title: Text(
+          _isEditMode ? 'Edit note' : 'Add note',
+          style: const TextStyle(
+            color: Colors.blue,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Cancel'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  labelStyle: TextStyle(color: Colors.blue),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _descriptionController,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  labelStyle: TextStyle(color: Colors.blue),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        TextButton(
-          onPressed: () async {
-            if (_titleController.text.isNotEmpty &&
-                _descriptionController.text.isNotEmpty) {
-              if (_isEditMode) {
-                await _noteStore.updateNoteAt(
-                  index: _editIndex,
-                  title: _titleController.text,
-                  description: _descriptionController.text,
-                  createdTime: DateTime.now(),
-                );
-              } else {
-                await _noteStore.addNote(
-                  title: _titleController.text,
-                  description: _descriptionController.text,
-                  createdTime: DateTime.now(),
-                  key: '',
-                );
-              }
+        actions: [
+          TextButton(
+            onPressed: () {
               Navigator.pop(context);
-              _titleController.clear();
-              _descriptionController.clear();
-            }
-          },
-          child: const Text('Save'),
-        ),
-      ],
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_titleController.text.isNotEmpty &&
+                  _descriptionController.text.isNotEmpty) {
+                if (_isEditMode) {
+                  await _noteStore.updateNoteAt(
+                    index: _editIndex,
+                    title: _titleController.text,
+                    description: _descriptionController.text,
+                    createdTime: DateTime.now(),
+                  );
+                } else {
+                  await _noteStore.addNote(
+                    title: _titleController.text,
+                    description: _descriptionController.text,
+                    createdTime: DateTime.now(),
+                    key: '',
+                  );
+                }
+                Navigator.pop(context);
+                _titleController.clear();
+                _descriptionController.clear();
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 }
