@@ -18,8 +18,7 @@ class HiveService {
     return box;
   }
 
-  Future<void> addNote(
-    Note note, {
+  Future<void> addNote({
     required String title,
     required String description,
     required DateTime createdTime,
@@ -32,7 +31,7 @@ class HiveService {
       createdTime: createdTime,
       key: key,
     );
-    box.add(note);
+    await box.add(note);
   }
 
   Future<void> removeNoteAt(int index) async {

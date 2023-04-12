@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -30,21 +31,29 @@ abstract class _NoteStore with Store {
       createdTime: createdTime,
       key: key,
     );
-    await _firebaseService.addNote(note);
-    await _hiveService.addNote(note,
-        title: 'title',
-        description: 'description',
+    if (await _firebaseService.hasInternetConnection()) {
+      final String? docId = await _firebaseService.addNote(note);
+      note.key = docId!;
+    } else {
+      await _hiveService.addNote(
+        title: title,
+        description: description,
         createdTime: createdTime,
-        key: 'key');
+        key: '',
+      );
+    }
     notesList.add(note);
   }
 
   @action
   Future<void> removeNoteAt(int index) async {
     final note = notesList[index];
-    await _firebaseService.deleteNote(note.key);
-    await _hiveService.removeNoteAt(index);
     notesList.removeAt(index);
+    if (await _firebaseService.hasInternetConnection()) {
+      await _firebaseService.deleteNote(note.key);
+    }
+    await _hiveService.removeNoteAt(index);
+    _notesListReaction();
   }
 
   @action
@@ -55,16 +64,27 @@ abstract class _NoteStore with Store {
     required DateTime createdTime,
   }) async {
     final note = notesList[index];
-    await FirebaseFirestore.instance.collection('notes').doc(note.key).update({
-      'title': title,
-      'description': description,
-      'createdTime': createdTime,
-    });
+    if (await _firebaseService.hasInternetConnection()) {
+      await _firebaseService.updateNote(
+        note.key as Note,
+        title,
+        description,
+        createdTime,
+      );
+    }
+    await _hiveService.updateNoteAt(
+      index: index,
+      title: title,
+      description: description,
+      createdTime: createdTime,
+      key: note.key,
+    );
     // Update the note in the local list
     notesList[index] = note.copyWith(
       title: title,
       description: description,
       createdTime: createdTime,
+      key: note.key,
     );
     // Notify the reaction that the list has changed
     _notesListReaction();
@@ -73,7 +93,7 @@ abstract class _NoteStore with Store {
   Future<void> init() async {
     _firebaseService.init();
     await _hiveService.init();
-    final notes = await _firebaseService.getAllNotes();
+    final notes = await _firebaseService.getAllNotesFromFirestore();
     if (notes != null) {
       notesList.addAll(notes);
     }

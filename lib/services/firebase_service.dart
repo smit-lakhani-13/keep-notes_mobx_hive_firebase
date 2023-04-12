@@ -23,11 +23,13 @@ class FirebaseService {
     }
   }
 
-  Future<void> updateNote(Note note) async {
+  Future<void> updateNote(
+      Note note, String title, String description, DateTime createdTime) async {
     try {
       await _firestore.collection('notes').doc(note.key).update({
-        'title': note.title,
-        'description': note.description,
+        'title': title,
+        'description': description,
+        'created': createdTime,
       });
     } catch (e) {
       print(e.toString());
@@ -42,7 +44,7 @@ class FirebaseService {
     }
   }
 
-  Future<List<Note>?> getAllNotes() async {
+  Future<List<Note>?> getAllNotesFromFirestore() async {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('notes').get();
       List<Note> notes = [];
@@ -64,5 +66,17 @@ class FirebaseService {
 
   void init() async {
     await Firebase.initializeApp();
+  }
+
+  Future<bool> hasInternetConnection() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('dummy')
+          .doc('dummy')
+          .get(GetOptions(source: Source.server));
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
