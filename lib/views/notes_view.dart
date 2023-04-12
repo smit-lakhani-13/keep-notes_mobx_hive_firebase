@@ -201,6 +201,7 @@ class _NotesViewState extends State<NotesView>
                     title: _titleController.text,
                     description: _descriptionController.text,
                     createdTime: DateTime.now(),
+                    key: '',
                   );
                 } else {
                   await _noteStore.addNote(

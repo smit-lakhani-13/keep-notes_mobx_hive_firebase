@@ -33,7 +33,7 @@ mixin _$NoteStore on _NoteStore, Store {
       {required String title,
       required String description,
       required DateTime createdTime,
-      required String key}) {
+      String? key}) {
     return _$addNoteAsyncAction.run(() => super.addNote(
         title: title,
         description: description,
@@ -57,12 +57,14 @@ mixin _$NoteStore on _NoteStore, Store {
       {required int index,
       required String title,
       required String description,
-      required DateTime createdTime}) {
+      required DateTime createdTime,
+      required String key}) {
     return _$updateNoteAtAsyncAction.run(() => super.updateNoteAt(
         index: index,
         title: title,
         description: description,
-        createdTime: createdTime));
+        createdTime: createdTime,
+        key: key));
   }
 
   @override

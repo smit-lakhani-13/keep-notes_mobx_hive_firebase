@@ -23,13 +23,13 @@ abstract class _NoteStore with Store {
     required String title,
     required String description,
     required DateTime createdTime,
-    required String key,
+    String? key,
   }) async {
     final note = Note(
       title: title,
       description: description,
       createdTime: createdTime,
-      key: key,
+      key: key ?? '',
     );
     if (await _firebaseService.hasInternetConnection()) {
       final String? docId = await _firebaseService.addNote(note);
@@ -39,7 +39,7 @@ abstract class _NoteStore with Store {
         title: title,
         description: description,
         createdTime: createdTime,
-        key: '',
+        key: note.key,
       );
     }
     notesList.add(note);
@@ -62,6 +62,7 @@ abstract class _NoteStore with Store {
     required String title,
     required String description,
     required DateTime createdTime,
+    required String key,
   }) async {
     final note = notesList[index];
     if (await _firebaseService.hasInternetConnection()) {
@@ -72,7 +73,7 @@ abstract class _NoteStore with Store {
         createdTime,
       );
     } else {
-      await _hiveService.updateNoteAt(
+      await _hiveService.editNoteAt(
         index: index,
         title: title,
         description: description,
@@ -92,11 +93,17 @@ abstract class _NoteStore with Store {
   }
 
   Future<void> init() async {
-    _firebaseService.init();
+    await Firebase.initializeApp();
     await _hiveService.init();
+
     final notes = await _firebaseService.getAllNotesFromFirestore();
     if (notes != null) {
       notesList.addAll(notes);
+    }
+
+    final localNotes = await _hiveService.getAllNotes();
+    if (localNotes != null) {
+      notesList.addAll(localNotes);
     }
   }
 
