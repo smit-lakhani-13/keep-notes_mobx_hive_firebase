@@ -66,19 +66,20 @@ abstract class _NoteStore with Store {
     final note = notesList[index];
     if (await _firebaseService.hasInternetConnection()) {
       await _firebaseService.updateNote(
-        note.key as Note,
+        note,
         title,
         description,
         createdTime,
       );
+    } else {
+      await _hiveService.updateNoteAt(
+        index: index,
+        title: title,
+        description: description,
+        createdTime: createdTime,
+        key: note.key,
+      );
     }
-    await _hiveService.updateNoteAt(
-      index: index,
-      title: title,
-      description: description,
-      createdTime: createdTime,
-      key: note.key,
-    );
     // Update the note in the local list
     notesList[index] = note.copyWith(
       title: title,

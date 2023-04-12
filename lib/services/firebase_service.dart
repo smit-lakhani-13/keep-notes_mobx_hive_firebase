@@ -44,7 +44,7 @@ class FirebaseService {
     }
   }
 
-  Future<List<Note>?> getAllNotesFromFirestore() async {
+  Future<List<Note>> getAllNotesFromFirestore() async {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('notes').get();
       List<Note> notes = [];
@@ -60,7 +60,7 @@ class FirebaseService {
       return notes;
     } catch (e) {
       print(e.toString());
-      return null;
+      return [];
     }
   }
 
