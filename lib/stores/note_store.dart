@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -54,18 +55,19 @@ abstract class _NoteStore with Store {
     required DateTime createdTime,
   }) async {
     final note = notesList[index];
-    note.title = title;
-    note.description = description;
-    note.createdTime = createdTime;
-    await _firebaseService.updateNote(note);
-    await _hiveService.updateNoteAt(
-      index: index,
+    await FirebaseFirestore.instance.collection('notes').doc(note.key).update({
+      'title': title,
+      'description': description,
+      'createdTime': createdTime,
+    });
+    // Update the note in the local list
+    notesList[index] = note.copyWith(
       title: title,
       description: description,
       createdTime: createdTime,
-      key: note.key,
     );
-    notesList[index] = note;
+    // Notify the reaction that the list has changed
+    _notesListReaction();
   }
 
   Future<void> init() async {
@@ -75,5 +77,9 @@ abstract class _NoteStore with Store {
     if (notes != null) {
       notesList.addAll(notes);
     }
+  }
+
+  void _notesListReaction() {
+    print(notesList);
   }
 }

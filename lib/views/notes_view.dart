@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:keep_notes/stores/note_store.dart';
+import 'package:intl/intl.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
@@ -44,23 +45,41 @@ class _NotesViewState extends State<NotesView> {
                 return Card(
                   child: ListTile(
                     title: Text(note.title),
-                    subtitle: Text(note.description),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        _noteStore.removeNoteAt(index);
-                      },
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(note.description),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Created: ${DateFormat.yMd().add_jm().format(note.createdTime)}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
                     ),
-                    onTap: () {
-                      _isEditMode = true;
-                      _editIndex = index;
-                      _titleController.text = note.title;
-                      _descriptionController.text = note.description;
-                      showDialog(
-                        context: context,
-                        builder: (_) => _buildAddNoteDialog(),
-                      );
-                    },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            _isEditMode = true;
+                            _editIndex = index;
+                            _titleController.text = note.title;
+                            _descriptionController.text = note.description;
+                            showDialog(
+                              context: context,
+                              builder: (_) => _buildAddNoteDialog(),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            _noteStore.removeNoteAt(index);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

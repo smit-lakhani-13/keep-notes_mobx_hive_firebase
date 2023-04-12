@@ -41,4 +41,18 @@ class Note {
       'id': key,
     };
   }
+
+  Note copyWith({
+    String? title,
+    String? description,
+    DateTime? createdTime,
+    String? key,
+  }) {
+    return Note(
+      title: title ?? this.title,
+      description: description ?? this.description,
+      createdTime: createdTime ?? this.createdTime,
+      key: key ?? this.key,
+    );
+  }
 }
