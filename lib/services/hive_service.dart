@@ -78,4 +78,9 @@ class HiveService {
     final notes = box.values.toList();
     return notes;
   }
+
+  Future<void> clearNotes() async {
+    final box = await openBox();
+    await box.clear();
+  }
 }

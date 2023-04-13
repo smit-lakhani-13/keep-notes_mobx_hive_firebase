@@ -34,6 +34,8 @@ abstract class _NoteStore with Store {
     if (await _firebaseService.hasInternetConnection()) {
       final String? docId = await _firebaseService.addNote(note);
       note.key = docId!;
+      // Clear the Hive database if the internet connection is restored
+      await _hiveService.clearNotes();
     } else {
       await _hiveService.addNote(
         title: title,
@@ -51,8 +53,10 @@ abstract class _NoteStore with Store {
     notesList.removeAt(index);
     if (await _firebaseService.hasInternetConnection()) {
       await _firebaseService.deleteNote(note.key);
+      await _hiveService.clearNotes();
+    } else {
+      await _hiveService.removeNoteAt(index);
     }
-    await _hiveService.removeNoteAt(index);
     _notesListReaction();
   }
 
@@ -72,6 +76,7 @@ abstract class _NoteStore with Store {
         description,
         createdTime,
       );
+      await _hiveService.clearNotes();
     } else {
       await _hiveService.editNoteAt(
         index: index,
@@ -81,14 +86,12 @@ abstract class _NoteStore with Store {
         key: note.key,
       );
     }
-    // Update the note in the local list
     notesList[index] = note.copyWith(
       title: title,
       description: description,
       createdTime: createdTime,
       key: note.key,
     );
-    // Notify the reaction that the list has changed
     _notesListReaction();
   }
 
