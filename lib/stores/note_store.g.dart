@@ -67,6 +67,33 @@ mixin _$NoteStore on _NoteStore, Store {
         key: key));
   }
 
+  late final _$uploadNotesFromHiveToFirebaseAsyncAction =
+      AsyncAction('_NoteStore.uploadNotesFromHiveToFirebase', context: context);
+
+  @override
+  Future<void> uploadNotesFromHiveToFirebase() {
+    return _$uploadNotesFromHiveToFirebaseAsyncAction
+        .run(() => super.uploadNotesFromHiveToFirebase());
+  }
+
+  late final _$syncNotesWithFirebaseAsyncAction =
+      AsyncAction('_NoteStore.syncNotesWithFirebase', context: context);
+
+  @override
+  Future<void> syncNotesWithFirebase() {
+    return _$syncNotesWithFirebaseAsyncAction
+        .run(() => super.syncNotesWithFirebase());
+  }
+
+  late final _$onSyncButtonPressedAsyncAction =
+      AsyncAction('_NoteStore.onSyncButtonPressed', context: context);
+
+  @override
+  Future<void> onSyncButtonPressed() {
+    return _$onSyncButtonPressedAsyncAction
+        .run(() => super.onSyncButtonPressed());
+  }
+
   @override
   String toString() {
     return '''

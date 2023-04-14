@@ -17,11 +17,15 @@ class Note {
   @HiveField(3)
   String key;
 
+  @HiveField(4)
+  bool synced; // added synced property
+
   Note({
     required this.title,
     required this.description,
     required this.createdTime,
     required this.key,
+    this.synced = false, // initialized to false
   });
 
   factory Note.fromMap(Map<String, dynamic> map) {
@@ -29,7 +33,8 @@ class Note {
       title: map['title'],
       description: map['description'],
       createdTime: (map['created'] as Timestamp).toDate(),
-      key: map['id'],
+      key: map['id'] ?? '',
+      synced: map['synced'] ?? false, // added synced property
     );
   }
 
@@ -39,6 +44,16 @@ class Note {
       'description': description,
       'created': createdTime,
       'id': key,
+      'synced': synced, // added synced property
+    };
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'createdTime': createdTime,
+      'key': key,
     };
   }
 
@@ -47,12 +62,14 @@ class Note {
     String? description,
     DateTime? createdTime,
     String? key,
+    bool? synced, // added synced property
   }) {
     return Note(
       title: title ?? this.title,
       description: description ?? this.description,
       createdTime: createdTime ?? this.createdTime,
       key: key ?? this.key,
+      synced: synced ?? this.synced, // added synced property
     );
   }
 }

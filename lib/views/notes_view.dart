@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:keep_notes/services/connectivity_service.dart';
 import 'package:keep_notes/stores/note_store.dart';
 import 'package:intl/intl.dart';
 
@@ -35,6 +36,7 @@ class _NotesViewState extends State<NotesView>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    ConnectivityService().init();
   }
 
   @override
@@ -135,8 +137,17 @@ class _NotesViewState extends State<NotesView>
             builder: (_) => _buildAddNoteDialog(),
           );
         },
-        child: const Icon(Icons.add),
         backgroundColor: Colors.indigo.shade400,
+        child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: ElevatedButton(
+          child: const Text('Sync Notes'),
+          onPressed: () async {
+            await _noteStore.onSyncButtonPressed();
+            setState(() {}); // update the UI after syncing
+          },
+        ),
       ),
     );
   }
