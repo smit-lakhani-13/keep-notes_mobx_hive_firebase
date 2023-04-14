@@ -59,7 +59,7 @@ class _NotesViewState extends State<NotesView>
       body: Observer(builder: (_) {
         if (_noteStore.notesList.isEmpty) {
           return const Center(
-            child: Text('No notes found.'),
+            child: CircularProgressIndicator(),
           );
         } else {
           return ListView.builder(

@@ -25,6 +25,21 @@ mixin _$NoteStore on _NoteStore, Store {
     });
   }
 
+  late final _$loadingAtom = Atom(name: '_NoteStore.loading', context: context);
+
+  @override
+  bool get loading {
+    _$loadingAtom.reportRead();
+    return super.loading;
+  }
+
+  @override
+  set loading(bool value) {
+    _$loadingAtom.reportWrite(value, super.loading, () {
+      super.loading = value;
+    });
+  }
+
   late final _$addNoteAsyncAction =
       AsyncAction('_NoteStore.addNote', context: context);
 
@@ -67,15 +82,6 @@ mixin _$NoteStore on _NoteStore, Store {
         key: key));
   }
 
-  late final _$uploadNotesFromHiveToFirebaseAsyncAction =
-      AsyncAction('_NoteStore.uploadNotesFromHiveToFirebase', context: context);
-
-  @override
-  Future<void> uploadNotesFromHiveToFirebase() {
-    return _$uploadNotesFromHiveToFirebaseAsyncAction
-        .run(() => super.uploadNotesFromHiveToFirebase());
-  }
-
   late final _$syncNotesWithFirebaseAsyncAction =
       AsyncAction('_NoteStore.syncNotesWithFirebase', context: context);
 
@@ -97,7 +103,8 @@ mixin _$NoteStore on _NoteStore, Store {
   @override
   String toString() {
     return '''
-notesList: ${notesList}
+notesList: ${notesList},
+loading: ${loading}
     ''';
   }
 }

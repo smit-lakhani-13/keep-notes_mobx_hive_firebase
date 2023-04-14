@@ -4,6 +4,7 @@ import 'package:mobx/mobx.dart';
 import 'package:keep_notes/models/note_model.dart';
 import 'package:keep_notes/services/firebase_service.dart' as firebase;
 import 'package:keep_notes/services/hive_service.dart';
+import 'package:collection/collection.dart';
 
 part 'note_store.g.dart';
 
@@ -17,6 +18,9 @@ abstract class _NoteStore with Store {
 
   @observable
   ObservableList<Note> notesList = ObservableList<Note>();
+
+  @observable
+  bool loading = false;
 
   @action
   Future<void> addNote({
@@ -98,56 +102,49 @@ abstract class _NoteStore with Store {
   }
 
   @action
-  Future<void> uploadNotesFromHiveToFirebase() async {
-    final List<Note> notes = await _hiveService.getAllNotes();
-    for (final note in notes) {
-      if (note.synced == false) {
-        await _firebaseService.addNote(note);
-      } else {
+  Future<void> syncNotesWithFirebase() async {
+    final unsyncedNotes = await _hiveService.getUnsyncedNotes();
+    final cloudNotes = await _firebaseService.getAllNotesFromFirestore();
+
+    // First, update notes that already exist in Firestore
+    for (final note in unsyncedNotes) {
+      final existingNote =
+          cloudNotes.firstWhereOrNull((n) => n.key == note.key);
+      if (existingNote != null) {
         await _firebaseService.updateNote(
-          note,
+          existingNote,
           note.title,
           note.description,
           note.createdTime,
         );
-      }
-      await _hiveService.removeNoteByKey(note.key);
-    }
-  }
-
-  @action
-  Future<void> syncNotesWithFirebase() async {
-    final unsyncedNotes = await _hiveService.getUnsyncedNotes();
-    for (final note in unsyncedNotes) {
-      final String? docId = await _firebaseService.addNote(note);
-      if (docId != null) {
         await _hiveService.setNoteSynced(note.key);
       }
     }
+
+    // Then, add notes that haven't been synced yet
     final List<Note> localNotes = await _hiveService.getAllNotes();
-
-    final List<Note> cloudNotes =
-        await _firebaseService.getAllNotesFromFirestore();
-
-    final List<Note> newNotes = localNotes.where((note) {
-      return note.synced == false &&
-          !cloudNotes.any((cloudNote) => cloudNote.key == note.key);
-    }).toList();
-    for (final note in newNotes) {
-      final String? docId = await _firebaseService.addNote(note);
-      if (docId != null) {
-        await _hiveService.setNoteSynced(note.key);
+    for (final note in localNotes) {
+      if (!note.synced) {
+        final existingNote =
+            cloudNotes.firstWhereOrNull((n) => n.key == note.key);
+        if (existingNote == null) {
+          final String? docId = await _firebaseService.addNote(note);
+          if (docId != null) {
+            await _hiveService.setNoteSynced(note.key);
+          }
+        }
       }
     }
   }
 
   @action
   Future<void> onSyncButtonPressed() async {
-    await uploadNotesFromHiveToFirebase();
     await syncNotesWithFirebase();
   }
 
   Future<void> init() async {
+    loading = true;
+
     await Firebase.initializeApp();
     await _hiveService.init();
 
@@ -159,6 +156,7 @@ abstract class _NoteStore with Store {
     if (localNotes != null) {
       notesList.addAll(localNotes);
     }
+    loading = false;
   }
 
   void _notesListReaction() {
