@@ -155,4 +155,9 @@ class HiveService {
         .cast<Note>();
     return notes;
   }
+
+  Future<void> clearAllNotes() async {
+    final box = await openBox();
+    await box.clear();
+  }
 }
