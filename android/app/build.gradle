@@ -76,5 +76,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:20.0.1'
     implementation 'com.google.firebase:firebase-firestore:23.0.4'
     implementation 'com.android.support:multidex:1.0.3'
-
-}
+    implementation 'androidx.multidex:multidex:2.0.1'
+    }

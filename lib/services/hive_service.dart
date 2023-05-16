@@ -6,9 +6,31 @@ import 'package:path_provider/path_provider.dart';
 class HiveService {
   static const String _boxName = 'notesBox';
 
+  // Define your sync method
+  Future<void> syncAllNotesFromHiveToFirestore() async {
+    // Open the Hive box containing the notes
+    final box = await Hive.openBox('notes');
+
+    // Retrieve all notes from the Hive box
+    final notes = box.values.toList();
+
+    // Sync each note to Firebase
+    for (final note in notes) {
+      // Create a reference to the Firebase document for the note
+      final noteRef =
+          FirebaseFirestore.instance.collection('notes').doc(note.id);
+
+      // Update the Firebase document with the note data
+      await noteRef.set(note.toMap());
+    }
+
+    // Close the Hive box
+    await box.close();
+  }
+
   Future<void> init() async {
     final appDocumentDir = await getApplicationDocumentsDirectory();
-    Hive.initFlutter(appDocumentDir.path);
+    await Hive.initFlutter(appDocumentDir.path);
     Hive.registerAdapter(NoteAdapter());
   }
 

@@ -40,6 +40,22 @@ mixin _$NoteStore on _NoteStore, Store {
     });
   }
 
+  late final _$hasOfflineNotesAtom =
+      Atom(name: '_NoteStore.hasOfflineNotes', context: context);
+
+  @override
+  bool get hasOfflineNotes {
+    _$hasOfflineNotesAtom.reportRead();
+    return super.hasOfflineNotes;
+  }
+
+  @override
+  set hasOfflineNotes(bool value) {
+    _$hasOfflineNotesAtom.reportWrite(value, super.hasOfflineNotes, () {
+      super.hasOfflineNotes = value;
+    });
+  }
+
   late final _$addNoteAsyncAction =
       AsyncAction('_NoteStore.addNote', context: context);
 
@@ -82,15 +98,6 @@ mixin _$NoteStore on _NoteStore, Store {
         key: key));
   }
 
-  late final _$syncNotesWithFirebaseAsyncAction =
-      AsyncAction('_NoteStore.syncNotesWithFirebase', context: context);
-
-  @override
-  Future<void> syncNotesWithFirebase() {
-    return _$syncNotesWithFirebaseAsyncAction
-        .run(() => super.syncNotesWithFirebase());
-  }
-
   late final _$onSyncButtonPressedAsyncAction =
       AsyncAction('_NoteStore.onSyncButtonPressed', context: context);
 
@@ -100,11 +107,21 @@ mixin _$NoteStore on _NoteStore, Store {
         .run(() => super.onSyncButtonPressed());
   }
 
+  late final _$syncNotesFromNotificationAsyncAction =
+      AsyncAction('_NoteStore.syncNotesFromNotification', context: context);
+
+  @override
+  Future<void> syncNotesFromNotification() {
+    return _$syncNotesFromNotificationAsyncAction
+        .run(() => super.syncNotesFromNotification());
+  }
+
   @override
   String toString() {
     return '''
 notesList: ${notesList},
-loading: ${loading}
+loading: ${loading},
+hasOfflineNotes: ${hasOfflineNotes}
     ''';
   }
 }
